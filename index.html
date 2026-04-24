@@ -37,7 +37,6 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
   position: relative;
 }
 
@@ -100,7 +99,7 @@ h1 {
   background: white;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
   flex-wrap: wrap;
-  padding: 8px;
+  padding: 8px 12px;
 }
 
 button {
@@ -112,11 +111,13 @@ button {
   font-size: 14px;
   cursor: pointer;
   transition: background 0.15s;
+  white-space: nowrap;
 }
 
-button:hover { background: #003a8c; }
+button:hover  { background: #003a8c; }
 button:active { background: #002d6e; }
 button:disabled { background: #a0b4cc; cursor: default; }
+button.active { background: #002d6e; }
 
 #pageInfo {
   font-weight: bold;
@@ -135,9 +136,10 @@ button:disabled { background: #a0b4cc; cursor: default; }
   font-size: 13px;
   text-align: center;
   color: #333;
+  outline: none;
 }
 
-#jumpInput:focus { outline: 2px solid #004aad; border-color: transparent; }
+#jumpInput:focus { border-color: #004aad; box-shadow: 0 0 0 2px rgba(0,74,173,0.2); }
 
 /* Toast notification */
 #toast {
@@ -161,14 +163,12 @@ button:disabled { background: #a0b4cc; cursor: default; }
   transform: translateX(-50%) translateY(0);
 }
 
-/* Zoom indicator */
-#zoomBtn.active { background: #002d6e; }
-
 @media (max-width: 768px) {
   h1 { font-size: 15px; margin: 6px 0; }
-  button { padding: 7px 10px; font-size: 12px; }
-  .controls { min-height: 70px; gap: 5px; }
+  button { padding: 7px 9px; font-size: 12px; }
+  .controls { min-height: 70px; gap: 5px; padding: 6px 8px; }
   #jumpInput { width: 44px; font-size: 12px; }
+  #pageInfo { font-size: 12px; min-width: 75px; }
 }
 </style>
 </head>
@@ -180,7 +180,6 @@ button:disabled { background: #a0b4cc; cursor: default; }
 
   <div class="viewer">
 
-    <!-- Loading overlay shown until images ready -->
     <div id="loadingOverlay">
       <div class="spinner"></div>
       <p>Loading catalogue&hellip;</p>
@@ -209,128 +208,131 @@ button:disabled { background: #a0b4cc; cursor: default; }
     <button id="nextBtn">Next &#8594;</button>
     <button id="zoomBtn">&#128269; Zoom</button>
     <button id="fullBtn">&#x26F6; Fullscreen</button>
-    <input id="jumpInput" type="number" min="1" max="12" placeholder="Go" title="Jump to page">
-    <button id="pdfBtn">&#8659; PDF</button>
+    <input id="jumpInput" type="number" min="1" max="12" placeholder="Go&#8230;" title="Type a page number and press Enter">
+    <button id="pdfBtn">&#8659; Download PDF</button>
   </div>
 </div>
 
 <div id="toast"></div>
 
-<!-- Pinned version to avoid unexpected breaking changes -->
+<!-- page-flip.browser.js exposes the global as St.PageFlip (NOT PageFlip) -->
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
 
 <script>
-const TOTAL_PAGES = 12;
-const isMobile = window.innerWidth <= 768;
-const PDF_URL = "./BTAPL-Catalogue.pdf"; // update path if needed
+  var TOTAL_PAGES = 12;
+  var PDF_URL     = "./BTAPL-Catalogue.pdf"; // ← update to match your PDF filename
 
-// Restore last-visited page from localStorage
-const savedPage = parseInt(localStorage.getItem("btapl_page") || "0", 10);
+  var isMobile = window.innerWidth <= 768;
 
-const pageFlip = new PageFlip(document.getElementById("book"), {
-  width:    isMobile ? 360 : 420,
-  height:   isMobile ? 510 : 595,
-  size: "stretch",
-  minWidth:  isMobile ? 300 : 360,
-  maxWidth:  isMobile ? window.innerWidth - 20 : 900,
-  minHeight: isMobile ? 420 : 500,
-  maxHeight: isMobile ? window.innerHeight - 145 : window.innerHeight - 120,
-  drawShadow: true,
-  flippingTime: 700,
-  usePortrait: true,
-  showCover: true,
-  maxShadowOpacity: 0.5,
-  mobileScrollSupport: false,
-  startPage: savedPage
-});
+  // Restore last-visited page from localStorage (falls back to page 0)
+  var savedPage = parseInt(localStorage.getItem("btapl_page") || "0", 10);
 
-pageFlip.loadFromHTML(document.querySelectorAll(".page"));
+  // IMPORTANT: Use St.PageFlip when loading via <script> tag (browser bundle)
+  var pageFlip = new St.PageFlip(document.getElementById("book"), {
+    width:    isMobile ? 360 : 420,
+    height:   isMobile ? 510 : 595,
+    size: "stretch",
+    minWidth:  isMobile ? 300  : 360,
+    maxWidth:  isMobile ? window.innerWidth - 20 : 900,
+    minHeight: isMobile ? 420  : 500,
+    maxHeight: isMobile ? window.innerHeight - 145 : window.innerHeight - 120,
+    drawShadow: true,
+    flippingTime: 700,
+    usePortrait: true,
+    showCover: true,
+    maxShadowOpacity: 0.5,
+    mobileScrollSupport: false,
+    startPage: savedPage
+  });
 
-// Hide loading overlay once the first flip event fires (library is ready)
-pageFlip.on("init", function () {
-  document.getElementById("loadingOverlay").style.display = "none";
-  updateUI(pageFlip.getCurrentPageIndex());
-});
+  pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-// Update page info + button states on every flip
-pageFlip.on("flip", function (e) {
-  const idx = e.data;
-  updateUI(idx);
-  localStorage.setItem("btapl_page", idx);
-});
+  // Hide loading spinner once the library finishes initialising
+  pageFlip.on("init", function () {
+    document.getElementById("loadingOverlay").style.display = "none";
+    updateUI(pageFlip.getCurrentPageIndex());
+  });
 
-function updateUI(idx) {
-  const page = idx + 1;
-  document.getElementById("pageInfo").textContent = "Page " + page + " / " + TOTAL_PAGES;
-  document.getElementById("prevBtn").disabled = idx === 0;
-  document.getElementById("nextBtn").disabled = idx === TOTAL_PAGES - 1;
-}
+  // Update controls on every page turn
+  pageFlip.on("flip", function (e) {
+    updateUI(e.data);
+    localStorage.setItem("btapl_page", e.data);
+  });
 
-// Navigation buttons
-document.getElementById("prevBtn").addEventListener("click", function () {
-  pageFlip.flipPrev();
-});
-document.getElementById("nextBtn").addEventListener("click", function () {
-  pageFlip.flipNext();
-});
+  function updateUI(idx) {
+    document.getElementById("pageInfo").textContent = "Page " + (idx + 1) + " / " + TOTAL_PAGES;
+    document.getElementById("prevBtn").disabled = (idx === 0);
+    document.getElementById("nextBtn").disabled = (idx === TOTAL_PAGES - 1);
+  }
 
-// Jump-to-page
-document.getElementById("jumpInput").addEventListener("keydown", function (e) {
-  if (e.key === "Enter") {
-    const n = parseInt(this.value, 10);
+  // Prev / Next buttons
+  document.getElementById("prevBtn").addEventListener("click", function () {
+    pageFlip.flipPrev();
+  });
+  document.getElementById("nextBtn").addEventListener("click", function () {
+    pageFlip.flipNext();
+  });
+
+  // Keyboard navigation — left/right arrow keys
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowLeft")  pageFlip.flipPrev();
+    if (e.key === "ArrowRight") pageFlip.flipNext();
+  });
+
+  // Jump-to-page: type a number then press Enter
+  document.getElementById("jumpInput").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var n = parseInt(this.value, 10);
     if (n >= 1 && n <= TOTAL_PAGES) {
       pageFlip.turnToPage(n - 1);
       this.value = "";
     } else {
-      showToast("Enter a page number between 1 and " + TOTAL_PAGES);
+      showToast("Please enter a page between 1 and " + TOTAL_PAGES);
       this.value = "";
     }
+  });
+
+  // Zoom toggle
+  var zoomed = false;
+  document.getElementById("zoomBtn").addEventListener("click", function () {
+    zoomed = !zoomed;
+    document.getElementById("book").style.transform = zoomed ? "scale(1.3)" : "scale(1)";
+    this.classList.toggle("active", zoomed);
+    this.textContent = zoomed ? "\uD83D\uDD0D Zoom out" : "\uD83D\uDD0D Zoom";
+  });
+
+  // Fullscreen
+  document.getElementById("fullBtn").addEventListener("click", function () {
+    var el  = document.documentElement;
+    var req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) {
+      req.call(el).catch(function () {
+        showToast("Fullscreen not available in this browser.");
+      });
+    } else {
+      showToast("Fullscreen is not supported here.");
+    }
+  });
+
+  // PDF Download
+  // Triggers a browser download of the PDF file.
+  // Place your PDF in the same folder as index.html and update PDF_URL above.
+  document.getElementById("pdfBtn").addEventListener("click", function () {
+    var a = document.createElement("a");
+    a.href     = PDF_URL;
+    a.download = "BTAPL-Catalogue.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  // Toast helper — small notification bar, auto-hides after 3 seconds
+  function showToast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function () { t.classList.remove("show"); }, 3000);
   }
-});
-
-// Keyboard navigation
-document.addEventListener("keydown", function (e) {
-  if (e.key === "ArrowLeft")  pageFlip.flipPrev();
-  if (e.key === "ArrowRight") pageFlip.flipNext();
-});
-
-// Zoom toggle
-let zoomed = false;
-document.getElementById("zoomBtn").addEventListener("click", function () {
-  zoomed = !zoomed;
-  document.getElementById("book").style.transform = zoomed ? "scale(1.3)" : "scale(1)";
-  this.classList.toggle("active", zoomed);
-  this.textContent = zoomed ? "\uD83D\uDD0D Zoom out" : "\uD83D\uDD0D Zoom";
-});
-
-// Fullscreen
-document.getElementById("fullBtn").addEventListener("click", function () {
-  const el = document.documentElement;
-  const req = el.requestFullscreen || el.webkitRequestFullscreen;
-  if (req) {
-    req.call(el).catch(function () {
-      showToast("Fullscreen not available in this browser.");
-    });
-  } else {
-    showToast("Fullscreen not supported here.");
-  }
-});
-
-// PDF download
-document.getElementById("pdfBtn").addEventListener("click", function () {
-  const a = document.createElement("a");
-  a.href = PDF_URL;
-  a.download = "BTAPL-Catalogue.pdf";
-  a.click();
-});
-
-// Toast helper
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(function () { t.classList.remove("show"); }, 3000);
-}
 </script>
 
 </body>
