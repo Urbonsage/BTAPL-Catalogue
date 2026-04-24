@@ -2,78 +2,151 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BTAPL Catalogue</title>
 
 <style>
-body {
+html, body {
   margin: 0;
+  padding: 0;
   background: #eef1f5;
   font-family: Arial, sans-serif;
-  text-align: center;
+  overflow: hidden;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h1 {
   color: #004aad;
-  margin: 16px;
+  font-size: 22px;
+  margin: 12px 0 8px;
+}
+
+.viewer {
+  width: 100vw;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
 #book {
-  margin: 0 auto;
+  margin: auto;
 }
 
 .page {
   background: white;
+  overflow: hidden;
 }
 
 .page img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  display: block;
+}
+
+.controls {
+  height: 58px;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+}
+
+button {
+  padding: 10px 18px;
+  background: #004aad;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 18px;
+    margin-top: 10px;
+  }
+
+  .controls {
+    height: 64px;
+  }
+
+  button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<h1>BTAPL Product Catalogue</h1>
+<div class="app">
+  <h1>BTAPL Product Catalogue</h1>
 
-<div id="book">
-  <div class="page"><img src="./Pages/1.jpg"></div>
-  <div class="page"><img src="./Pages/2.jpg"></div>
-  <div class="page"><img src="./Pages/3.jpg"></div>
-  <div class="page"><img src="./Pages/4.jpg"></div>
-  <div class="page"><img src="./Pages/5.jpg"></div>
-  <div class="page"><img src="./Pages/6.jpg"></div>
-  <div class="page"><img src="./Pages/7.jpg"></div>
-  <div class="page"><img src="./Pages/8.jpg"></div>
-  <div class="page"><img src="./Pages/9.jpg"></div>
-  <div class="page"><img src="./Pages/10.jpg"></div>
-  <div class="page"><img src="./Pages/11.jpg"></div>
-  <div class="page"><img src="./Pages/12.jpg"></div>
+  <div class="viewer">
+    <div id="book">
+      <div class="page"><img src="./Pages/1.jpg"></div>
+      <div class="page"><img src="./Pages/2.jpg"></div>
+      <div class="page"><img src="./Pages/3.jpg"></div>
+      <div class="page"><img src="./Pages/4.jpg"></div>
+      <div class="page"><img src="./Pages/5.jpg"></div>
+      <div class="page"><img src="./Pages/6.jpg"></div>
+      <div class="page"><img src="./Pages/7.jpg"></div>
+      <div class="page"><img src="./Pages/8.jpg"></div>
+      <div class="page"><img src="./Pages/9.jpg"></div>
+      <div class="page"><img src="./Pages/10.jpg"></div>
+      <div class="page"><img src="./Pages/11.jpg"></div>
+      <div class="page"><img src="./Pages/12.jpg"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="prevBtn">Previous</button>
+    <button id="nextBtn">Next</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
 
 <script>
+const isMobile = window.innerWidth <= 768;
+
 const pageFlip = new St.PageFlip(document.getElementById("book"), {
-  width: 450,
-  height: 640,
+  width: isMobile ? 360 : 420,
+  height: isMobile ? 510 : 595,
   size: "stretch",
-  minWidth: 315,
-  maxWidth: 900,
-  minHeight: 420,
-  maxHeight: 1280,
+  minWidth: isMobile ? 300 : 360,
+  maxWidth: isMobile ? window.innerWidth - 24 : 900,
+  minHeight: isMobile ? 420 : 500,
+  maxHeight: isMobile ? window.innerHeight - 150 : window.innerHeight - 120,
   drawShadow: true,
   flippingTime: 700,
   usePortrait: true,
-  startZIndex: 0,
-  autoSize: true,
+  showCover: false,
   maxShadowOpacity: 0.5,
-  showCover: true,
-  mobileScrollSupport: true
+  mobileScrollSupport: false
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
+
+document.getElementById("prevBtn").addEventListener("click", function () {
+  pageFlip.flipPrev();
+});
+
+document.getElementById("nextBtn").addEventListener("click", function () {
+  pageFlip.flipNext();
+});
 </script>
 
 </body>
