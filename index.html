@@ -18,10 +18,14 @@ h1 {
 }
 
 #flipbook {
-  margin: auto;
+  width: 900px;
+  height: 600px;
+  margin: 20px auto;
 }
 
-#flipbook .page {
+#flipbook div {
+  width: 450px;
+  height: 600px;
   background: white;
 }
 
@@ -49,18 +53,18 @@ button {
 <h1>BTAPL Product Catalogue</h1>
 
 <div id="flipbook">
-  <div class="page"><img src="Pages/1.jpg"></div>
-  <div class="page"><img src="Pages/2.jpg"></div>
-  <div class="page"><img src="Pages/3.jpg"></div>
-  <div class="page"><img src="Pages/4.jpg"></div>
-  <div class="page"><img src="Pages/5.jpg"></div>
-  <div class="page"><img src="Pages/6.jpg"></div>
-  <div class="page"><img src="Pages/7.jpg"></div>
-  <div class="page"><img src="Pages/8.jpg"></div>
-  <div class="page"><img src="Pages/9.jpg"></div>
-  <div class="page"><img src="Pages/10.jpg"></div>
-  <div class="page"><img src="Pages/11.jpg"></div>
-  <div class="page"><img src="Pages/12.jpg"></div>
+  <div><img src="./Pages/1.jpg"></div>
+  <div><img src="./Pages/2.jpg"></div>
+  <div><img src="./Pages/3.jpg"></div>
+  <div><img src="./Pages/4.jpg"></div>
+  <div><img src="./Pages/5.jpg"></div>
+  <div><img src="./Pages/6.jpg"></div>
+  <div><img src="./Pages/7.jpg"></div>
+  <div><img src="./Pages/8.jpg"></div>
+  <div><img src="./Pages/9.jpg"></div>
+  <div><img src="./Pages/10.jpg"></div>
+  <div><img src="./Pages/11.jpg"></div>
+  <div><img src="./Pages/12.jpg"></div>
 </div>
 
 <div>
@@ -68,14 +72,20 @@ button {
   <button onclick="$('#flipbook').turn('next')">Next</button>
 </div>
 
-<script src="jquery.min.js"></script>
-<script src="turn.min.js"></script>
+<!-- Use CDN for jQuery (more reliable) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Your Turn.js file -->
+<script src="./turn.min.js"></script>
 
 <script>
-$("#flipbook").turn({
-  width: 900,
-  height: 600,
-  autoCenter: true
+$(window).on("load", function () {
+  $("#flipbook").turn({
+    width: 900,
+    height: 600,
+    autoCenter: true,
+    display: "double"
+  });
 });
 </script>
 
