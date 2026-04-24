@@ -82,6 +82,7 @@ button {
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 button:hover {
@@ -97,10 +98,12 @@ button:disabled {
   font-weight: bold;
   font-size: 13px;
   color: #333;
+  min-width: 58px;
+  text-align: center;
 }
 
 #jumpInput {
-  width: 52px;
+  width: 46px;
   padding: 7px;
   border: 1px solid #c0cfe0;
   border-radius: 8px;
@@ -128,22 +131,28 @@ button:disabled {
   }
 
   .controls {
-    min-height: 72px;
-    gap: 5px;
+    min-height: 82px;
+    gap: 6px;
+    padding: 6px;
   }
 
   button {
-    font-size: 12px;
+    font-size: 11px;
     padding: 7px 9px;
   }
 
   #pageInfo {
-    font-size: 12px;
+    font-size: 11px;
+    min-width: 48px;
   }
 
+  #fullBtn,
   #jumpInput {
-    width: 44px;
-    font-size: 12px;
+    display: none;
+  }
+
+  #pdfBtn {
+    display: inline-block;
   }
 }
 </style>
@@ -172,13 +181,13 @@ button:disabled {
   </div>
 
   <div class="controls">
-    <button id="prevBtn">← Prev</button>
-    <span id="pageInfo">Page 1 / 12</span>
-    <button id="nextBtn">Next →</button>
-    <button id="zoomBtn">🔍 Zoom</button>
-    <button id="fullBtn">⛶ Fullscreen</button>
-    <input id="jumpInput" type="number" min="1" max="12" placeholder="Go">
-    <button id="pdfBtn">⇩ PDF</button>
+    <button id="prevBtn">←</button>
+    <button id="nextBtn">→</button>
+    <span id="pageInfo">1 / 12</span>
+    <button id="zoomBtn">🔍</button>
+    <button id="fullBtn">⛶</button>
+    <button id="pdfBtn">PDF</button>
+    <input id="jumpInput" type="number" min="1" max="12" placeholder="#">
   </div>
 </div>
 
@@ -199,13 +208,13 @@ if (!PageFlipClass) {
   alert("Flipbook library failed to load. Please check internet connection.");
 } else {
   const pageFlip = new PageFlipClass(bookElement, {
-    width: isMobile ? 340 : 420,
-    height: isMobile ? 480 : 595,
+    width: isMobile ? 330 : 420,
+    height: isMobile ? 467 : 595,
     size: "stretch",
-    minWidth: isMobile ? 280 : 360,
-    maxWidth: isMobile ? window.innerWidth - 24 : 850,
-    minHeight: isMobile ? 390 : 500,
-    maxHeight: isMobile ? window.innerHeight - 155 : window.innerHeight - 120,
+    minWidth: isMobile ? 270 : 360,
+    maxWidth: isMobile ? window.innerWidth - 20 : 850,
+    minHeight: isMobile ? 380 : 500,
+    maxHeight: isMobile ? window.innerHeight - 145 : window.innerHeight - 120,
     drawShadow: true,
     flippingTime: 700,
     usePortrait: true,
@@ -218,7 +227,7 @@ if (!PageFlipClass) {
   pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
   function updateUI(index) {
-    document.getElementById("pageInfo").textContent = "Page " + (index + 1) + " / " + TOTAL_PAGES;
+    document.getElementById("pageInfo").textContent = (index + 1) + " / " + TOTAL_PAGES;
     document.getElementById("prevBtn").disabled = index === 0;
     document.getElementById("nextBtn").disabled = index === TOTAL_PAGES - 1;
   }
@@ -264,11 +273,11 @@ if (!PageFlipClass) {
     zoomed = !zoomed;
 
     if (zoomed) {
-      bookElement.style.transform = isMobile ? "scale(1.12)" : "scale(1.18)";
-      this.textContent = "🔍 Fit";
+      bookElement.style.transform = isMobile ? "scale(1.1)" : "scale(1.15)";
+      this.textContent = "Fit";
     } else {
       bookElement.style.transform = "scale(1)";
-      this.textContent = "🔍 Zoom";
+      this.textContent = "🔍";
     }
   });
 
