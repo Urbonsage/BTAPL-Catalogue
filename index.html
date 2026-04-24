@@ -215,20 +215,31 @@ button.active { background: #002d6e; }
 
 <div id="toast"></div>
 
-<!-- page-flip.browser.js exposes the global as St.PageFlip (NOT PageFlip) -->
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
 
 <script>
   var TOTAL_PAGES = 12;
-  var PDF_URL     = "./BTAPL-Catalogue.pdf"; // ← update to match your PDF filename
+  var PDF_URL     = "./BTAPL-Catalogue.pdf";
 
   var isMobile = window.innerWidth <= 768;
 
-  // Restore last-visited page from localStorage (falls back to page 0)
+  // FIX 1: Validate savedPage so stale localStorage values don't cause out-of-range startPage
   var savedPage = parseInt(localStorage.getItem("btapl_page") || "0", 10);
+  if (isNaN(savedPage) || savedPage < 0 || savedPage >= TOTAL_PAGES) {
+    savedPage = 0;
+  }
 
-  // IMPORTANT: Use St.PageFlip when loading via <script> tag (browser bundle)
-  var pageFlip = new St.PageFlip(document.getElementById("book"), {
+  // FIX 2: page-flip@2.0.7 browser bundle exposes the constructor as window.PageFlip (NOT St.PageFlip).
+  //         We try both names so this works regardless of minor CDN bundle differences.
+  var PageFlipConstructor = (window.PageFlip) || (window.St && window.St.PageFlip);
+
+  if (!PageFlipConstructor) {
+    document.getElementById("loadingOverlay").innerHTML =
+      "<p style='color:#c00;padding:16px;text-align:center'>Error: page-flip library failed to load.<br>Check your internet connection and try again.</p>";
+    throw new Error("PageFlip constructor not found on window.");
+  }
+
+  var pageFlip = new PageFlipConstructor(document.getElementById("book"), {
     width:    isMobile ? 360 : 420,
     height:   isMobile ? 510 : 595,
     size: "stretch",
@@ -247,9 +258,20 @@ button.active { background: #002d6e; }
 
   pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
+  // FIX 3: Fallback timeout hides the loading overlay even if the "init" event never fires
+  var overlayHidden = false;
+  function hideOverlay() {
+    if (!overlayHidden) {
+      overlayHidden = true;
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+  }
+
+  setTimeout(hideOverlay, 4000);
+
   // Hide loading spinner once the library finishes initialising
   pageFlip.on("init", function () {
-    document.getElementById("loadingOverlay").style.display = "none";
+    hideOverlay();
     updateUI(pageFlip.getCurrentPageIndex());
   });
 
@@ -283,7 +305,7 @@ button.active { background: #002d6e; }
   document.getElementById("jumpInput").addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
     var n = parseInt(this.value, 10);
-    if (n >= 1 && n <= TOTAL_PAGES) {
+    if (!isNaN(n) && n >= 1 && n <= TOTAL_PAGES) {
       pageFlip.turnToPage(n - 1);
       this.value = "";
     } else {
@@ -314,9 +336,8 @@ button.active { background: #002d6e; }
     }
   });
 
-  // PDF Download
-  // Triggers a browser download of the PDF file.
-  // Place your PDF in the same folder as index.html and update PDF_URL above.
+  // PDF Download — NOTE: works correctly only when served over HTTP/HTTPS.
+  // Opening index.html directly via file:// will silently block the download.
   document.getElementById("pdfBtn").addEventListener("click", function () {
     var a = document.createElement("a");
     a.href     = PDF_URL;
