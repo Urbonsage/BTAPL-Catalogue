@@ -149,7 +149,7 @@ const pageFlip = new St.PageFlip(document.getElementById("book"), {
   drawShadow: true,
   flippingTime: 700,
   usePortrait: true,
-  showCover: false,
+  showCover: true,
   maxShadowOpacity: 0.5,
   mobileScrollSupport: false
 });
@@ -175,10 +175,14 @@ document.getElementById("zoomBtn").addEventListener("click", function () {
 });
 
 document.getElementById("fullBtn").addEventListener("click", function () {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen();
+  const elem = document.documentElement;
+
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) {
+    elem.webkitRequestFullscreen();
   } else {
-    document.exitFullscreen();
+    alert("Fullscreen is not supported on this mobile browser. Please rotate your phone or use browser full-screen mode.");
   }
 });
 </script>
